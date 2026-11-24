@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Precios </title>
+  <style>
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2330;
+      --border:    #30363d;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --accent:    #39d353;
+      --accent2:   #58a6ff;
+      --danger:    #f85149;
+      --warn:      #d29922;
+
+      /* Colores únicos por plataforma */
+      --c-quest:    #7c3aed;
+      --c-web:      #2563eb;
+      --c-ml:       #d97706;
+      --c-saga:     #dc2626;
+      --c-juntoz:   #0891b2;
+      --c-inter:    #4f46e5;
+      --c-shop:     #c026d3;
+      --c-ripley:   #be185d;
+      --c-rappi:    #ea580c;
+      --c-diners:   #0d9488;
+      --c-luxury:   #b45309;
+      --c-coolbox:  #16a34a;
+      --c-efe:      #475569;
+      --c-calidda:  #0369a1;
+      --c-claro:    #b91c1c;
+      --c-mesajil:  #6d28d9;
+      --c-yape:     #7c3aed;
+
+      --radius: 8px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      color: var(--accent);
+      text-transform: uppercase;
+      border: 1px solid var(--accent);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+    .header-meta { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.5; }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: 100%;
+      padding: 28px 32px;
+    }
+
+    /* ── INPUT CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    textarea {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 12px 14px;
+      resize: vertical;
+      min-height: 130px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    textarea:focus { border-color: var(--accent2); }
+
+    .btn-calc {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #0d1117;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 22px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .15s, transform .1s;
+      align-self: flex-end;
+    }
+    .btn-calc:hover { opacity: .88; }
+    .btn-calc:active { transform: scale(.97); }
+    .btn-calc:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-calc svg { flex-shrink: 0; }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* spinner */
+    .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(0,0,0,.3);
+      border-top-color: #0d1117;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .dot-ok  { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .dot-err { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+
+    /* ── RESULTS HEADER ── */
+    .results-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .results-meta { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .results-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .results-label span {
+      color: var(--accent2);
+      font-family: var(--font-mono);
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+    .stat-pill .stat-icon { font-size: 13px; }
+    .stat-pill .stat-val  { font-family: var(--font-mono); font-weight: 700; color: var(--accent); }
+    .stat-pill .stat-lbl  { color: var(--muted); }
+
+    .export-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .export-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── TABLE ── */
+    .table-wrapper {
+      display: none;
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      white-space: nowrap;
+    }
+
+    thead tr {
+      background: var(--surface2);
+    }
+
+    th {
+      padding: 10px 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: 11px;
+      border-bottom: 2px solid var(--border);
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    /* Sticky base columns */
+    th:nth-child(1), td:nth-child(1) { min-width: 220px; }
+    th:nth-child(2), td:nth-child(2) { min-width: 90px; }
+    th:nth-child(3), td:nth-child(3) { min-width: 80px; }
+    th:nth-child(4), td:nth-child(4) { min-width: 55px; }
+    th:nth-child(5), td:nth-child(5) { min-width: 80px; }
+    th:nth-child(6), td:nth-child(6) { min-width: 70px; }
+
+    /* Platform column widths */
+    th:nth-child(n+7) { min-width: 88px; text-align: center; }
+    td:nth-child(n+7) { text-align: center; }
+
+    /* Platform header colors */
+    th.ph-quest     { background: color-mix(in srgb, var(--c-quest) 30%, var(--surface2)); color: #c4b5fd; border-top: 2px solid var(--c-quest); }
+    th.ph-web       { background: color-mix(in srgb, var(--c-web) 30%, var(--surface2)); color: #93c5fd; border-top: 2px solid var(--c-web); }
+    th.ph-ml        { background: color-mix(in srgb, var(--c-ml) 30%, var(--surface2)); color: #fcd34d; border-top: 2px solid var(--c-ml); }
+    th.ph-saga      { background: color-mix(in srgb, var(--c-saga) 30%, var(--surface2)); color: #fca5a5; border-top: 2px solid var(--c-saga); }
+    th.ph-juntoz    { background: color-mix(in srgb, var(--c-juntoz) 30%, var(--surface2)); color: #67e8f9; border-top: 2px solid var(--c-juntoz); }
+    th.ph-inter     { background: color-mix(in srgb, var(--c-inter) 30%, var(--surface2)); color: #a5b4fc; border-top: 2px solid var(--c-inter); }
+    th.ph-shop      { background: color-mix(in srgb, var(--c-shop) 30%, var(--surface2)); color: #f0abfc; border-top: 2px solid var(--c-shop); }
+    th.ph-ripley    { background: color-mix(in srgb, var(--c-ripley) 30%, var(--surface2)); color: #fbcfe8; border-top: 2px solid var(--c-ripley); }
+    th.ph-rappi     { background: color-mix(in srgb, var(--c-rappi) 30%, var(--surface2)); color: #fdba74; border-top: 2px solid var(--c-rappi); }
+    th.ph-diners    { background: color-mix(in srgb, var(--c-diners) 30%, var(--surface2)); color: #5eead4; border-top: 2px solid var(--c-diners); }
+    th.ph-luxury    { background: color-mix(in srgb, var(--c-luxury) 30%, var(--surface2)); color: #fde68a; border-top: 2px solid var(--c-luxury); }
+    th.ph-coolbox   { background: color-mix(in srgb, var(--c-coolbox) 30%, var(--surface2)); color: #86efac; border-top: 2px solid var(--c-coolbox); }
+    th.ph-efe       { background: color-mix(in srgb, var(--c-efe) 30%, var(--surface2)); color: #cbd5e1; border-top: 2px solid var(--c-efe); }
+    th.ph-calidda   { background: color-mix(in srgb, var(--c-calidda) 30%, var(--surface2)); color: #7dd3fc; border-top: 2px solid var(--c-calidda); }
+    th.ph-claro     { background: color-mix(in srgb, var(--c-claro) 30%, var(--surface2)); color: #fca5a5; border-top: 2px solid var(--c-claro); }
+    th.ph-mesajil   { background: color-mix(in srgb, var(--c-mesajil) 30%, var(--surface2)); color: #c4b5fd; border-top: 2px solid var(--c-mesajil); }
+    th.ph-yape      { background: color-mix(in srgb, var(--c-yape) 30%, var(--surface2)); color: #ddd6fe; border-top: 2px solid var(--c-yape); }
+
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    td.nombre-cell {
+      font-weight: 500;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    td.sku-cell {
+      font-family: var(--font-mono);
+      color: var(--accent2);
+      font-size: 12px;
+    }
+    td.num-cell {
+      font-family: var(--font-mono);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    td.precio-base {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text);
+    }
+    td.precio-plat {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    td.precio-plat.empty { color: var(--muted); }
+    td.cat-cell {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .05em;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .tag-video   { background: rgba(88,166,255,.15); color: #58a6ff; }
+    .tag-consola { background: rgba(57,211,83,.15);  color: #39d353; }
+    .tag-acceso  { background: rgba(210,153,34,.15); color: #d29922; }
+    .tag-silla   { background: rgba(168,85,247,.15); color: #a855f7; }
+    .tag-funko   { background: rgba(249,115,22,.15); color: #f97316; }
+    .tag-gift    { background: rgba(20,184,166,.15); color: #14b8a6; }
+    .tag-default { background: rgba(139,148,158,.15); color: #8b949e; }
+
+    /* Error row */
+    tr.row-error td { background: rgba(248,81,73,.05); }
+    tr.row-error td:first-child { border-left: 3px solid var(--danger); }
+
+    /* ── EMPTY / ERROR STATES ── */
+    .state-msg {
+      display: none;
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .state-msg .state-icon { font-size: 36px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="header-badge">Precios</div>
+    <div class="header-title">Sistema de Precios</div>
+  </div>
+  <div class="header-meta">
+    <br>
+    <span style="color:var(--accent);font-size:11px;">● Solo lectura de datos</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-title">SKUs</div>
+    <div class="input-row">
+      <textarea id="skuInput" placeholder="GC00001&#10;GC00002&#10;GC00003&#10;..."></textarea>
+      <button class="btn-calc" id="btnCalc" onclick="calcular()">
+        <div class="spinner" id="spinner"></div>
+        <svg id="btnIcon" width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0Zm.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588ZM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/>
+        </svg>
+        <span id="btnTxt">Calcular precios</span>
+      </button>
+    </div>
+    <p class="hint">Puedes pegar directamente tus SKUs, sin necesidad de escribir uno por uno. Se ignoran líneas vacías y duplicados.</p>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-bar" id="statusBar">
+    <div class="dot-ok" id="statusDot"></div>
+    <span id="statusMsg"></span>
+  </div>
+
+  <!-- RESULTS HEADER -->
+  <div class="results-header" id="resultsHeader">
+    <div class="results-meta">
+      <div class="results-label">Resultados &nbsp;<span id="skuCount">0</span> SKU(s)</div>
+      <div class="stat-pill">
+        <span class="stat-icon">⏱</span>
+        <span class="stat-val" id="timeVal">—</span>
+        <span class="stat-lbl">tiempo de ejecución</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-icon">✓</span>
+        <span class="stat-val" id="okCount">—</span>
+        <span class="stat-lbl">calculados</span>
+      </div>
+      <div class="stat-pill" id="errPill" style="display:none;">
+        <span class="stat-icon" style="color:var(--danger)">✗</span>
+        <span class="stat-val" id="errCount" style="color:var(--danger)">—</span>
+        <span class="stat-lbl">con error</span>
+      </div>
+    </div>
+    <button class="export-btn" onclick="exportCSV()">↓ Exportar CSV</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrapper" id="tableWrapper">
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>SKU</th>
+          <th>Categoría</th>
+          <th>TC</th>
+          <th>Costo USD</th>
+          <th>Prec. Venta</th>
+          <th class="ph-quest">QuestTime</th>
+          <th class="ph-web">Pág. Web</th>
+          <th class="ph-ml">MercadoLibre</th>
+          <th class="ph-saga">Saga Falabella</th>
+          <th class="ph-juntoz">Juntoz</th>
+          <th class="ph-inter">Intercorp</th>
+          <th class="ph-shop">Shopstar</th>
+          <th class="ph-ripley">Ripley</th>
+          <th class="ph-rappi">Rappi</th>
+          <th class="ph-diners">Diners</th>
+          <th class="ph-luxury">Luxury</th>
+          <th class="ph-coolbox">Coolbox</th>
+          <th class="ph-efe">EFE</th>
+          <th class="ph-calidda">Calidda</th>
+          <th class="ph-claro">Claro</th>
+          <th class="ph-mesajil">Mesajil</th>
+          <th class="ph-yape">Yape</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="state-msg" id="emptyMsg">
+      <div class="state-icon">🔍</div>
+      No se encontraron resultados para los SKUs ingresados.
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── Resultado global para exportar ──
+  var _lastResults = [];
+
+  function calcular() {
+    var raw = document.getElementById('skuInput').value;
+    var lines = raw.split('\n');
+    var skus = [];
+    var seen = {};
+    lines.forEach(function(l) {
+      var s = l.trim();
+      if (s && !seen[s]) { seen[s] = true; skus.push(s); }
+    });
+
+    if (!skus.length) {
+      showStatus(false, 'Ingresa al menos un SKU.');
+      return;
+    }
+
+    setLoading(true);
+    hideResults();
+
+    var t0 = performance.now();
+
+    // Llama al servidor GAS
+    google.script.run
+      .withSuccessHandler(function(data) {
+        var elapsed = performance.now() - t0;
+        setLoading(false);
+        _lastResults = data || [];
+        renderResults(_lastResults, elapsed);
+      })
+      .withFailureHandler(function(err) {
+        setLoading(false);
+        showStatus(false, 'Error: ' + (err.message || err));
+      })
+      .calcularPreciosBatch(skus);
+  }
+
+  function setLoading(on) {
+    var btn = document.getElementById('btnCalc');
+    var sp  = document.getElementById('spinner');
+    var ico = document.getElementById('btnIcon');
+    var txt = document.getElementById('btnTxt');
+    btn.disabled = on;
+    sp.style.display  = on ? 'block' : 'none';
+    ico.style.display = on ? 'none'  : 'block';
+    txt.textContent   = on ? 'Calculando…' : 'Calcular precios';
+  }
+
+  function hideResults() {
+    document.getElementById('resultsHeader').style.display = 'none';
+    document.getElementById('tableWrapper').style.display  = 'none';
+    document.getElementById('statusBar').style.display     = 'none';
+    document.getElementById('emptyMsg').style.display      = 'none';
+  }
+
+  function showStatus(ok, msg) {
+    var bar = document.getElementById('statusBar');
+    var dot = document.getElementById('statusDot');
+    var txt = document.getElementById('statusMsg');
+    bar.style.display = 'flex';
+    dot.className = ok ? 'dot-ok' : 'dot-err';
+    txt.textContent = msg;
+  }
+
+  function fmtTime(ms) {
+    if (ms < 1000) return ms.toFixed(0) + ' ms';
+    return (ms / 1000).toFixed(2) + ' s';
+  }
+
+  var PLATAFORMAS = [
+    'questTime','paginaWeb','mercadoLibre','sagaFalabella','juntoz',
+    'intercorp','shopstar','ripley','rappi','diners','luxury',
+    'coolbox','efe','calidda','claro','mesajil','yape'
+  ];
+
+  function catTag(cat) {
+    var c = (cat || '').toUpperCase();
+    if (c === 'VIDEOJUEGOS')          return '<span class="tag tag-video">Videojuegos</span>';
+    if (c === 'CONSOLAS')             return '<span class="tag tag-consola">Consolas</span>';
+    if (c === 'ACCESORIOS')           return '<span class="tag tag-acceso">Accesorios</span>';
+    if (c === 'SILLA' || c === 'SILLAS') return '<span class="tag tag-silla">Sillas</span>';
+    if (c.includes('FUNKO'))          return '<span class="tag tag-funko">Funkos</span>';
+    if (c.includes('GIFCARD'))        return '<span class="tag tag-gift">Gifcard</span>';
+    return '<span class="tag tag-default">' + (cat || '—') + '</span>';
+  }
+
+  function renderResults(data, elapsed) {
+    var tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    var ok  = 0;
+    var err = 0;
+
+    data.forEach(function(row) {
+      if (row.error) { err++; } else { ok++; }
+
+      var tr = document.createElement('tr');
+      if (row.error) tr.className = 'row-error';
+
+      if (row.error) {
+        tr.innerHTML =
+          '<td class="nombre-cell" colspan="5" style="color:var(--danger)">' +
+            (row.sku || '—') + ' — ' + row.error +
+          '</td>' +
+          '<td colspan="18" style="color:var(--muted);font-size:11px;">Sin datos</td>';
+      } else {
+        var cells = '<td class="nombre-cell" title="' + (row.nombre||'') + '">' + (row.nombre || '—') + '</td>';
+        cells += '<td class="sku-cell">'    + (row.sku || '—')        + '</td>';
+        cells += '<td class="cat-cell">'   + catTag(row.categoria)    + '</td>';
+        cells += '<td class="num-cell">'   + fmt(row.tc)              + '</td>';
+        cells += '<td class="num-cell">'   + fmt(row.costo)           + '</td>';
+        cells += '<td class="precio-base">S/ ' + fmt(row.precioVenta) + '</td>';
+        PLATAFORMAS.forEach(function(p) {
+          var v = row.precios ? row.precios[p] : '';
+          var empty = (v === '' || v == null);
+          cells += '<td class="precio-plat' + (empty ? ' empty' : '') + '">' +
+                   (empty ? '—' : 'S/ ' + fmt(v)) + '</td>';
+        });
+        tr.innerHTML = cells;
+      }
+
+      tbody.appendChild(tr);
+    });
+
+    // Results header
+    var rh = document.getElementById('resultsHeader');
+    rh.style.display = 'flex';
+    document.getElementById('skuCount').textContent = data.length;
+    document.getElementById('timeVal').textContent  = fmtTime(elapsed);
+    document.getElementById('okCount').textContent  = ok;
+
+    var errPill = document.getElementById('errPill');
+    if (err > 0) {
+      errPill.style.display = 'flex';
+      document.getElementById('errCount').textContent = err;
+    } else {
+      errPill.style.display = 'none';
+    }
+
+    var tw = document.getElementById('tableWrapper');
+    tw.style.display = 'block';
+
+    if (data.length === 0) {
+      document.getElementById('emptyMsg').style.display = 'block';
+    }
+
+    showStatus(true, 'Cálculo completado correctamente.');
+  }
+
+  function fmt(v) {
+    if (v === '' || v == null) return '—';
+    var n = Number(v);
+    if (isNaN(n)) return v;
+    return n % 1 === 0 ? n.toLocaleString('es-PE') : n.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function exportCSV() {
+    if (!_lastResults.length) return;
+    var headers = ['Nombre','SKU','Categoria','TC','Costo USD','Prec. Venta'].concat(PLATAFORMAS);
+    var rows = [headers];
+    _lastResults.forEach(function(row) {
+      if (row.error) {
+        rows.push([row.error, row.sku]);
+        return;
+      }
+      var r = [
+        row.nombre || '', row.sku || '', row.categoria || '',
+        row.tc || '', row.costo || '', row.precioVenta || ''
+      ];
+      PLATAFORMAS.forEach(function(p) {
+        r.push(row.precios ? (row.precios[p] || '') : '');
+      });
+      rows.push(r);
+    });
+    var csv = rows.map(function(r) {
+      return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(',');
+    }).join('\n');
+    var blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url; a.download = 'precios_gamecenter.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Tecla Enter en textarea (Ctrl+Enter) lanza cálculo ──
+  document.getElementById('skuInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) calcular();
+  });
+</script>
+
+</body>
+</html>
